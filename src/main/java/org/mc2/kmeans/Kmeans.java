@@ -45,9 +45,10 @@ public class Kmeans {
 				clusterUri = "hdfs://mcmaster:9000/home/cluster.txt";
 			}
 			else {
-				clusterUri = "hdfs://mcmaster:9000/home/output/"
+				clusterUri = conf.get("kmeans.otuput.path")
 						+ this.round + "/part-r-00000";
 			}
+			System.out.println("Read from : " + clusterUri);
 			
 
 			FileSystem fs = FileSystem.get(URI.create(clusterUri), conf);
@@ -73,8 +74,8 @@ public class Kmeans {
 					// process the second position in the line
 					String[] num = sTokenizer.nextToken().split(",");
 					try {
-						int num0 = Integer.parseInt(num[0].trim());
-						int num1 = Integer.parseInt(num[1].trim());
+						double num0 = Double.parseDouble(num[0].trim());
+						double num1 = Double.parseDouble(num[1].trim());
 						Point point = new Point(num0, num1);
 						this.cluster.add(point);
 					} catch (ArrayIndexOutOfBoundsException e) {
@@ -179,18 +180,22 @@ public class Kmeans {
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args)
 				.getRemainingArgs();
-		if (otherArgs.length != 1) {
-			System.err.println("Usage: org.mc2.kmeans.Kmeans <round> ");
+		if (otherArgs.length != 2) {
+			System.err.println("Usage: org.mc2.kmeans.Kmeans <round> <outputFolder> ");
 			System.exit(2);
 		}
 
 		int round = Integer.parseInt(otherArgs[0]);
 		System.out.println("Num : " + round);
 		
+		String outputFolder = otherArgs[1];
+		
 		for (int i = 0; i < round; i++) {
 
 			conf.setInt("kmeans.round", i);
 			System.out.println("Round : " + i);
+			
+			conf.setStrings("kmeans.otuput.path", "hdfs://mcmaster:9000/home/output/"+outputFolder+"/");
 
 			Job job = new Job(conf, "Kmeans cluster" + i);
 			job.setJarByClass(Kmeans.class);
@@ -200,7 +205,7 @@ public class Kmeans {
 			job.setOutputKeyClass(Text.class);
 			job.setOutputValueClass(Text.class);
 			FileInputFormat.addInputPath(job, new Path("hdfs://mcmaster:9000/home/input"));
-			FileOutputFormat.setOutputPath(job, new Path("hdfs://mcmaster:9000/home/output/" + (i + 1)));
+			FileOutputFormat.setOutputPath(job, new Path("hdfs://mcmaster:9000/home/output/" + outputFolder + "/" + (i + 1)));
 			job.waitForCompletion(true);
 		}
 	}
