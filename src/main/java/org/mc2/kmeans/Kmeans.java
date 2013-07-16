@@ -45,8 +45,7 @@ public class Kmeans {
 				clusterUri = "hdfs://mcmaster:9000/home/cluster.txt";
 			}
 			else {
-				clusterUri = conf.get("kmeans.otuput.path")
-						+ this.round + "/part-r-00000";
+				clusterUri = conf.get("kmeans.otuput.path")	+ this.round + "/part-r-00000";
 			}
 			System.out.println("Read from : " + clusterUri);
 			
@@ -180,22 +179,27 @@ public class Kmeans {
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args)
 				.getRemainingArgs();
-		if (otherArgs.length != 2) {
-			System.err.println("Usage: org.mc2.kmeans.Kmeans <round> <outputFolder> ");
+		if (otherArgs.length != 3) {
+			System.err.println("Usage: org.mc2.kmeans.Kmeans <round> <input> <output> ");
 			System.exit(2);
 		}
 
 		int round = Integer.parseInt(otherArgs[0]);
 		System.out.println("Num : " + round);
 		
-		String outputFolder = otherArgs[1];
+		String inputFodler = otherArgs[1];
+		String outputFolder = otherArgs[2];
+		
+		if (!outputFolder.endsWith("/")) {
+			outputFolder = outputFolder + "/";
+		}
 		
 		for (int i = 0; i < round; i++) {
 
 			conf.setInt("kmeans.round", i);
 			System.out.println("Round : " + i);
 			
-			conf.setStrings("kmeans.otuput.path", "hdfs://mcmaster:9000/home/output/"+outputFolder+"/");
+			conf.setStrings("kmeans.otuput.path", outputFolder);
 
 			Job job = new Job(conf, "Kmeans cluster" + i);
 			job.setJarByClass(Kmeans.class);
@@ -204,8 +208,8 @@ public class Kmeans {
 			job.setReducerClass(PointCenter.class);
 			job.setOutputKeyClass(Text.class);
 			job.setOutputValueClass(Text.class);
-			FileInputFormat.addInputPath(job, new Path("hdfs://mcmaster:9000/home/input"));
-			FileOutputFormat.setOutputPath(job, new Path("hdfs://mcmaster:9000/home/output/" + outputFolder + "/" + (i + 1)));
+			FileInputFormat.addInputPath(job, new Path(inputFodler));
+			FileOutputFormat.setOutputPath(job, new Path(outputFolder + (i + 1)));
 			job.waitForCompletion(true);
 		}
 	}
