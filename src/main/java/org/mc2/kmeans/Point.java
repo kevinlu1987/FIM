@@ -78,14 +78,12 @@ public class Point implements Writable{
 		return Math.sqrt(Math.pow(this.x - p.x, 2) + Math.pow(this.y - p.y, 2));
 	}
 
-	@Override
 	public void write(DataOutput out) throws IOException {
 		// TODO Auto-generated method stub
 		out.writeDouble(x);
 		out.writeDouble(y);
 	}
 
-	@Override
 	public void readFields(DataInput in) throws IOException {
 		// TODO Auto-generated method stub
 		this.x = in.readDouble();

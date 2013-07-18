@@ -40,9 +40,10 @@ public class Kmeans {
 
 			this.round = conf.getInt("kmeans.round", 0);
 
-			String clusterUri = null;
+			String clusterUri; 
+			
 			if (this.round == 0) {
-				clusterUri = "hdfs://mcmaster:9000/home/cluster.txt";
+				clusterUri = conf.get("kmeans.cluster.path");
 			}
 			else {
 				clusterUri = conf.get("kmeans.otuput.path")	+ this.round + "/part-r-00000";
@@ -179,16 +180,20 @@ public class Kmeans {
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args)
 				.getRemainingArgs();
-		if (otherArgs.length != 3) {
-			System.err.println("Usage: org.mc2.kmeans.Kmeans <round> <input> <output> ");
+		if (otherArgs.length != 5) {
+			System.err.println("Usage: org.mc2.kmeans.Kmeans <round> <clusterFile> <inputFolder> <outputFolder> <isMemcaced>");
 			System.exit(2);
 		}
 
 		int round = Integer.parseInt(otherArgs[0]);
 		System.out.println("Num : " + round);
 		
-		String inputFodler = otherArgs[1];
-		String outputFolder = otherArgs[2];
+		String clusterFile = otherArgs[1];
+		String inputFodler = otherArgs[2];
+		String outputFolder = otherArgs[3];
+		
+		int isMemcached = Integer.parseInt(otherArgs[4]);
+		System.out.println("isMemcached : " + isMemcached);
 		
 		if (!outputFolder.endsWith("/")) {
 			outputFolder = outputFolder + "/";
@@ -199,7 +204,10 @@ public class Kmeans {
 			conf.setInt("kmeans.round", i);
 			System.out.println("Round : " + i);
 			
+			conf.setStrings("kmeans.input.path", inputFodler);
 			conf.setStrings("kmeans.otuput.path", outputFolder);
+			conf.setStrings("kmeans.cluster.path", clusterFile);
+			conf.setInt("kmeans.memcached", isMemcached);
 
 			Job job = new Job(conf, "Kmeans cluster" + i);
 			job.setJarByClass(Kmeans.class);
